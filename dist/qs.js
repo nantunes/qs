@@ -1,23 +1,6 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Qs = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 // Load modules
 
-var Stringify = require('./stringify');
-var Parse = require('./parse');
-
-
-// Declare internals
-
-var internals = {};
-
-
-module.exports = {
-    stringify: Stringify,
-    parse: Parse
-};
-
-},{"./parse":2,"./stringify":3}],2:[function(require,module,exports){
-// Load modules
-
 var Utils = require('./utils');
 
 
@@ -183,7 +166,7 @@ module.exports = function (str, options) {
     return Utils.compact(obj);
 };
 
-},{"./utils":4}],3:[function(require,module,exports){
+},{"./utils":3}],2:[function(require,module,exports){
 // Load modules
 
 var Utils = require('./utils');
@@ -205,6 +188,9 @@ var internals = {
         repeat: function (prefix, key) {
 
             return prefix;
+        },
+        comma: function (prefix, key) {
+            return key == -1 ? (prefix ? prefix : '[]') : null;
         }
     },
     strictNullHandling: false
@@ -234,7 +220,7 @@ internals.stringify = function (obj, prefix, generateArrayPrefix, strictNullHand
         typeof obj === 'number' ||
         typeof obj === 'boolean') {
 
-        return [Utils.encode(prefix) + '=' + Utils.encode(obj)];
+        return [(prefix ? Utils.encode(prefix) + '=' : '') + Utils.encode(obj)];
     }
 
     var values = [];
@@ -244,15 +230,21 @@ internals.stringify = function (obj, prefix, generateArrayPrefix, strictNullHand
     }
 
     var objKeys = Array.isArray(filter) ? filter : Object.keys(obj);
+    var isArray = Array.isArray(obj);
     for (var i = 0, il = objKeys.length; i < il; ++i) {
         var key = objKeys[i];
 
-        if (Array.isArray(obj)) {
+        if (isArray) {
             values = values.concat(internals.stringify(obj[key], generateArrayPrefix(prefix, key), generateArrayPrefix, strictNullHandling, filter));
         }
         else {
-            values = values.concat(internals.stringify(obj[key], prefix + '[' + key + ']', generateArrayPrefix, strictNullHandling, filter));
+            values = values.concat(internals.stringify(obj[key], (prefix ? prefix : '') + '[' + key + ']', generateArrayPrefix, strictNullHandling, filter));
         }
+    }
+
+    if (isArray && generateArrayPrefix === internals.arrayPrefixGenerators['comma']) {
+        var hasPrefix = (prefix !== null);
+        return [(hasPrefix ? Utils.encode(prefix) + '=' : '[') + values.map(Utils.encode).join(',') + (hasPrefix ? '' : ']')];
     }
 
     return values;
@@ -306,7 +298,7 @@ module.exports = function (obj, options) {
     return keys.join(delimiter);
 };
 
-},{"./utils":4}],4:[function(require,module,exports){
+},{"./utils":3}],3:[function(require,module,exports){
 // Load modules
 
 
@@ -498,8 +490,22 @@ exports.isBuffer = function (obj) {
               obj.constructor.isBuffer(obj));
 };
 
-},{}],5:[function(require,module,exports){
-module.exports = require('./lib/');
+},{}],4:[function(require,module,exports){
+// Load modules
 
-},{"./lib/":1}]},{},[5])(5)
+var Stringify = require('./stringify');
+var Parse = require('./parse');
+
+
+// Declare internals
+
+var internals = {};
+
+
+module.exports = {
+    stringify: Stringify,
+    parse: Parse
+};
+
+},{"./parse":1,"./stringify":2}]},{},[4])(4)
 });
